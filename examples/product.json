@@ -1,0 +1,31 @@
+{
+  "brief": {
+    "goal": "为一款桌面产品制作概念短片",
+    "subject": "极简桌面产品",
+    "audience": "关注设计和效率的用户",
+    "style": "克制、干净的电影感",
+    "duration_seconds": 15,
+    "aspect_ratio": "16:9",
+    "audio_intent": "生成与画面匹配的环境声和轻微背景音乐",
+    "user_constraints": ["保持产品外观一致"]
+  },
+  "storyboard_strategy": "none",
+  "references": [
+    {
+      "ordinal": 1,
+      "asset_id": "product-front",
+      "role": "subject",
+      "label": "主体正视图",
+      "url": "https://example.com/product-front.png"
+    }
+  ],
+  "duration_seconds": 15,
+  "generate_audio": true,
+  "subject_description": "保持产品的外形、材质、颜色和关键结构一致",
+  "scene_description": "干净的桌面环境，柔和侧光，空间关系稳定",
+  "motion_description": "从静止展示开始，缓慢推近并轻微环绕，最后回到稳定产品视图",
+  "continuity_constraints": ["主体身份和外观始终一致"],
+  "rhythm": "自然、连贯、具有品牌感",
+  "ending_description": "画面自然收束并保持主体清晰",
+  "negative_constraints": ["不出现额外文字、水印或无关 Logo"]
+}
