@@ -36,6 +36,17 @@ video-skill render examples/product.json --provider gateway --output-dir ./video
 `build-prompt` 只执行本地计划校验和 Prompt 构建，不会创建云端视频任务。
 `render` 会创建一个真实任务并轮询到成片，请确认模型账号和素材授权后再运行。
 
+### 使用前提与边界
+
+- Python `>=3.10`；安装命令会注册 `video-skill` CLI。
+- `references[].url` 必须是模型服务能够访问的 HTTP(S) 图片地址；本地路径、未授权资源和需要登录的地址不能直接使用。
+- 官方 provider 需要火山方舟账号、可用的 Seedance 模型权限和有效 API Key；模型 ID 是否对你的账号开放，以方舟控制台为准。
+- 当前核心契约固定为 15 秒、`generate_audio=true`，画幅使用计划中的支持值；不满足时会在发起请求前失败。
+- `render` 会把 MP4 下载到 `--output-dir`，当前 CLI 不包含对象存储、视频转码、工作区登记或自动发布。需要这些能力时，实现 `ArtifactStore` / `DeliverySink` 适配器。
+- 仓库测试使用模拟 HTTP 响应验证请求、轮询和下载逻辑；真实账号、额度、素材可访问性和平台审核仍需在你的环境中做一次小样本验收。
+
+建议先执行 `validate` 和 `build-prompt`，确认计划与素材顺序，再用一条低成本样例调用 `render`。
+
 ### Provider 配置
 
 `seedance` 是默认 provider，直连火山方舟任务接口：
