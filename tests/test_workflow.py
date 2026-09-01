@@ -4,6 +4,7 @@ from pathlib import Path
 import pytest
 
 from video_skill.models import PlanError, plan_from_dict
+from video_skill.adapters import ArtifactStore, DeliverySink, Renderer
 from video_skill.workflow import build_prompt, idempotency_key, validate_plan
 
 
@@ -42,3 +43,9 @@ def test_duration_and_audio_contract_are_enforced():
     raw["generate_audio"] = False
     with pytest.raises(PlanError, match="generate_audio"):
         validate_plan(raw)
+
+
+def test_adapter_protocols_are_importable_without_provider_dependencies():
+    assert Renderer is not None
+    assert ArtifactStore is not None
+    assert DeliverySink is not None
