@@ -5,7 +5,7 @@ import json
 import sys
 from pathlib import Path
 
-from .renderers import GatewayRenderer, SeedanceOfficialRenderer
+from .renderers import GatewayRenderer, SeedanceRenderer
 from .workflow import build_prompt, idempotency_key, to_render_request, validate_plan
 
 
@@ -38,7 +38,7 @@ def main(argv: list[str] | None = None) -> int:
     elif args.command == "build-prompt":
         print(build_prompt(plan))
     else:
-        renderer_type = SeedanceOfficialRenderer if args.provider == "seedance" else GatewayRenderer
+        renderer_type = SeedanceRenderer if args.provider == "seedance" else GatewayRenderer
         renderer = renderer_type(base_url=args.base_url, model=args.model, output_dir=args.output_dir)
         try:
             artifact = renderer.wait(renderer.create(to_render_request(plan)))

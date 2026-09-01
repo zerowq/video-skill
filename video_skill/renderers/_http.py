@@ -62,7 +62,7 @@ def _video_url(body: dict[str, Any]) -> str:
 
 
 class HttpTaskRenderer(Renderer):
-    """Shared task lifecycle for Ark-shaped HTTP video APIs."""
+    """Shared task lifecycle for task-based HTTP video APIs."""
 
     def __init__(
         self,
@@ -142,7 +142,7 @@ class HttpTaskRenderer(Renderer):
 
     def create(self, request: RenderRequest) -> TaskHandle:
         if self.require_api_key and not self.api_key:
-            raise RendererError("not_configured", "缺少 ARK_API_KEY（也可使用 VOLCENGINE_API_KEY）")
+            raise RendererError("not_configured", "缺少 SEEDANCE_API_KEY")
         if not request.prompt.strip():
             raise RendererError("prompt_required", "视频 Prompt 不能为空")
         if len(request.references) < 1:

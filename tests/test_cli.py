@@ -26,21 +26,21 @@ def test_render_cli_selects_gateway_provider(tmp_path: Path, monkeypatch, capsys
     assert json.loads(capsys.readouterr().out)["task_id"] == "cli-task"
 
 
-def test_render_cli_defaults_to_official_provider(tmp_path: Path, monkeypatch):
+def test_render_cli_defaults_to_seedance_provider(tmp_path: Path, monkeypatch):
     plan_path = tmp_path / "plan.json"
     plan_path.write_text((Path(__file__).parents[1] / "examples/product.json").read_text(), encoding="utf-8")
     selected = []
 
-    class FakeOfficial:
+    class FakeSeedance:
         def __init__(self, **kwargs):
             selected.append(kwargs)
 
         def create(self, _request):
-            return TaskHandle(task_id="official-task")
+            return TaskHandle(task_id="seedance-task")
 
         def wait(self, _task):
-            return RenderedVideo(path=tmp_path / "official-task.mp4", task_id="official-task")
+            return RenderedVideo(path=tmp_path / "seedance-task.mp4", task_id="seedance-task")
 
-    monkeypatch.setattr(cli, "SeedanceOfficialRenderer", FakeOfficial)
+    monkeypatch.setattr(cli, "SeedanceRenderer", FakeSeedance)
     assert cli.main(["render", str(plan_path), "--output-dir", str(tmp_path)]) == 0
     assert selected == [{"base_url": None, "model": None, "output_dir": str(tmp_path)}]

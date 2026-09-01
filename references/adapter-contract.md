@@ -20,16 +20,16 @@ An adapter owns provider authentication, provider field mapping, retries, pollin
 
 An adapter should expose a deterministic dry-run mode and never log credentials or private user asset URLs. If the host has SSE, workspace cards, or a conversation context, translate the published artifact at the host boundary instead of importing those concepts into `video_skill`.
 
-## Official Seedance renderer
+## Seedance renderer
 
-`video_skill.renderers.SeedanceOfficialRenderer` targets the official Volcengine Ark API:
+`video_skill.renderers.SeedanceRenderer` targets a configurable Seedance task API:
 
 ```text
-POST https://ark.cn-beijing.volces.com/api/v3/contents/generations/tasks
-GET  https://ark.cn-beijing.volces.com/api/v3/contents/generations/tasks/{task_id}
+POST ${SEEDANCE_BASE_URL}
+GET  ${SEEDANCE_BASE_URL}/{task_id}
 ```
 
-Set `ARK_API_KEY` (or `VOLCENGINE_API_KEY`). `SEEDANCE_BASE_URL` may override the complete tasks URL, and `SEEDANCE_MODEL` may override the model ID. The adapter sends a Bearer token, one Ark-shaped task, polls that same task, and downloads the final MP4 atomically. Missing credentials are a hard configuration error; there is no gateway fallback.
+Set `SEEDANCE_BASE_URL` to the complete task creation endpoint and `SEEDANCE_API_KEY` for Bearer authentication. `SEEDANCE_MODEL` may override the model ID. The adapter sends one task, polls that same task, and downloads the final MP4 atomically. Missing credentials are a hard configuration error; there is no gateway fallback.
 
 ## Compatible gateway renderer
 
@@ -45,6 +45,5 @@ single text item followed by ordered `reference_image` items, passes the stable
 idempotency key in request headers, polls the original task, and downloads the final
 MP4 atomically into `output_dir`. It does not retry by creating a second task.
 
-`video_skill.renderers.seedance.SeedanceRenderer` remains as a legacy compatibility
-import path for the former gateway adapter. New code should import
-`SeedanceOfficialRenderer` or `GatewayRenderer` explicitly.
+`video_skill.renderers.seedance.SeedanceRenderer` is the configurable Seedance
+adapter. New code can import it or `GatewayRenderer` explicitly.
