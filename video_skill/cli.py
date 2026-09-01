@@ -5,7 +5,7 @@ import json
 import sys
 from pathlib import Path
 
-from .renderers.seedance import SeedanceRenderer
+from .renderers import GatewayRenderer, SeedanceOfficialRenderer
 from .workflow import build_prompt, idempotency_key, to_render_request, validate_plan
 
 
@@ -24,7 +24,9 @@ def main(argv: list[str] | None = None) -> int:
         command.add_argument("plan")
         if name == "render":
             command.add_argument("--output-dir", default="./video-output")
-            command.add_argument("--base-url", default=None)
+            command.add_argument("--provider", choices=("seedance", "gateway"), default="seedance")
+            command.add_argument("--base-url", default=None, help="覆盖所选 provider 的任务 API 地址")
+            command.add_argument("--model", default=None, help="覆盖所选 provider 的模型 ID")
     args = parser.parse_args(argv)
     try:
         plan = validate_plan(_load(args.plan))
@@ -36,7 +38,8 @@ def main(argv: list[str] | None = None) -> int:
     elif args.command == "build-prompt":
         print(build_prompt(plan))
     else:
-        renderer = SeedanceRenderer(base_url=args.base_url, output_dir=args.output_dir)
+        renderer_type = SeedanceOfficialRenderer if args.provider == "seedance" else GatewayRenderer
+        renderer = renderer_type(base_url=args.base_url, model=args.model, output_dir=args.output_dir)
         try:
             artifact = renderer.wait(renderer.create(to_render_request(plan)))
         except Exception as exc:  # provider errors are rendered as a concise CLI failure

@@ -1,5 +1,16 @@
 """Optional renderer integrations."""
 
-from .seedance import SeedanceRenderer, SeedanceRendererError
+from .gateway import GatewayRenderer, GatewayRendererError
+from .seedance_official import SeedanceOfficialRenderer, SeedanceOfficialRendererError
 
-__all__ = ["SeedanceRenderer", "SeedanceRendererError"]
+SeedanceRenderer = SeedanceOfficialRenderer
+SeedanceRendererError = SeedanceOfficialRendererError
+
+__all__ = [
+    "GatewayRenderer",
+    "GatewayRendererError",
+    "SeedanceOfficialRenderer",
+    "SeedanceOfficialRendererError",
+    "SeedanceRenderer",
+    "SeedanceRendererError",
+]

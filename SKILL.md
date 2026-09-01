@@ -27,9 +27,11 @@ Use this skill to turn a video request into a validated, reproducible production
 
 ## Repository runtime
 
-The bundled `video_skill` package is host-independent and provides the plan model, normalizer, preflight checks, prompt builder, adapter protocols, and an optional Seedance HTTP renderer. Use `video-skill validate <file>` or `video-skill build-prompt <file>` for local dry runs. Use `VIDEO_SKILL_BASE_URL=... VIDEO_SKILL_API_KEY=... video-skill render <file>` only when you intend to create a provider task.
+The bundled `video_skill` package is host-independent and provides the plan model, normalizer, preflight checks, prompt builder, adapter protocols, and two HTTP renderers. Use `video-skill validate <file>` or `video-skill build-prompt <file>` for local dry runs. `video-skill render <file>` defaults to the official Seedance provider; use `--provider gateway` only for a compatible gateway.
 
-For a real render, implement or install a renderer adapter and configure its credentials outside the plan file. Read `references/adapter-contract.md` before adding a provider integration.
+For the official provider, configure `ARK_API_KEY` (or `VOLCENGINE_API_KEY`). Optionally set `SEEDANCE_BASE_URL` and `SEEDANCE_MODEL`. For the gateway provider, configure `VIDEO_SKILL_BASE_URL`, `VIDEO_SKILL_API_KEY`, and optionally `VIDEO_SKILL_MODEL`. Credentials never belong in the plan JSON. Providers are explicit and never silently fall back to each other.
+
+For a real render, configure the selected adapter's credentials outside the plan file. Read `references/adapter-contract.md` before adding a provider integration.
 
 ## References
 

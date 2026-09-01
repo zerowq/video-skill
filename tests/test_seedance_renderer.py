@@ -1,8 +1,14 @@
 import json
 from pathlib import Path
+from urllib.error import HTTPError
+from io import BytesIO
 
-from video_skill.adapters import RenderRequest
-from video_skill.renderers.seedance import SeedanceRenderer, SeedanceRendererError
+import pytest
+
+from video_skill.adapters import RenderRequest, TaskHandle
+from video_skill.renderers.gateway import GatewayRenderer, GatewayRendererError
+from video_skill.renderers.seedance import SeedanceRenderer as LegacySeedanceRenderer
+from video_skill.renderers.seedance_official import SeedanceOfficialRenderer, SeedanceOfficialRendererError
 
 
 class FakeResponse:
@@ -29,7 +35,7 @@ def request():
     )
 
 
-def test_seedance_renderer_creates_polls_and_downloads(tmp_path: Path):
+def test_official_renderer_creates_polls_and_downloads(tmp_path: Path):
     calls = []
 
     def opener(req, timeout):
@@ -40,23 +46,74 @@ def test_seedance_renderer_creates_polls_and_downloads(tmp_path: Path):
             return FakeResponse(json.dumps({"id": "seed-1", "status": "succeeded", "content": {"video_url": "https://cdn.example/video.mp4"}}).encode())
         return FakeResponse(b"....ftypisom....")
 
-    renderer = SeedanceRenderer(base_url="https://gateway.example", output_dir=tmp_path, poll_interval_seconds=0, opener=opener)
+    renderer = SeedanceOfficialRenderer(
+        api_key="ark-test-key",
+        base_url="https://ark.example/api/v3/contents/generations/tasks",
+        output_dir=tmp_path,
+        poll_interval_seconds=0,
+        opener=opener,
+    )
     artifact = renderer.wait(renderer.create(request()))
     assert artifact.task_id == "seed-1"
     assert artifact.path.read_bytes().startswith(b"....ftyp")
     assert [call[0] for call in calls] == ["POST", "GET", "GET"]
+    assert calls[0][1] == "https://ark.example/api/v3/contents/generations/tasks"
     assert calls[0][2]["content"][1]["image_url"]["url"].endswith("subject.png")
-    assert calls[0][3]["Idempotency-key"] == "video-test-key"
+    assert calls[0][3]["Authorization"] == "Bearer ark-test-key"
+    assert "Idempotency-key" not in calls[0][3]
 
 
-def test_seedance_renderer_does_not_accept_missing_task_id():
-    def opener(_req, **_kwargs):
-        return FakeResponse(b"{}")
+def test_gateway_renderer_keeps_compatible_contract(tmp_path: Path):
+    calls = []
 
-    renderer = SeedanceRenderer(opener=opener)
-    try:
+    def opener(req, timeout):
+        calls.append((req.method, req.full_url, dict(req.header_items())))
+        if req.method == "POST":
+            return FakeResponse(json.dumps({"id": "gateway-1"}).encode())
+        if req.full_url.endswith("/gateway-1"):
+            return FakeResponse(json.dumps({"status": "completed", "video_url": "https://cdn.example/video.mp4"}).encode())
+        return FakeResponse(b"video")
+
+    renderer = GatewayRenderer(base_url="https://gateway.example", output_dir=tmp_path, poll_interval_seconds=0, opener=opener)
+    renderer.wait(renderer.create(request()))
+    assert calls[0][1] == "https://gateway.example/v1/videos/generations"
+    assert calls[0][2]["Idempotency-key"] == "video-test-key"
+
+
+def test_legacy_seedance_import_still_targets_gateway():
+    assert LegacySeedanceRenderer is GatewayRenderer
+
+
+def test_official_renderer_requires_api_key(monkeypatch):
+    monkeypatch.delenv("ARK_API_KEY", raising=False)
+    monkeypatch.delenv("VOLCENGINE_API_KEY", raising=False)
+    renderer = SeedanceOfficialRenderer(opener=lambda *_args, **_kwargs: pytest.fail("must not call network"))
+    with pytest.raises(SeedanceOfficialRendererError, match="ARK_API_KEY") as exc_info:
         renderer.create(request())
-    except SeedanceRendererError as exc:
-        assert exc.code == "task_id_missing"
-    else:
-        raise AssertionError("missing task id should fail")
+    assert exc_info.value.code == "not_configured"
+
+
+def test_renderer_rejects_missing_task_id():
+    renderer = SeedanceOfficialRenderer(api_key="test", opener=lambda *_args, **_kwargs: FakeResponse(b"{}"))
+    with pytest.raises(SeedanceOfficialRendererError) as exc_info:
+        renderer.create(request())
+    assert exc_info.value.code == "task_id_missing"
+
+
+def test_renderer_surfaces_http_error():
+    def opener(_req, **_kwargs):
+        raise HTTPError("https://ark.example", 500, "upstream", {}, BytesIO(b"server exploded"))
+
+    renderer = SeedanceOfficialRenderer(api_key="test", opener=opener)
+    with pytest.raises(SeedanceOfficialRendererError) as exc_info:
+        renderer.create(request())
+    assert exc_info.value.code == "provider_http_error"
+    assert exc_info.value.retryable is True
+    assert exc_info.value.status_code == 500
+
+
+def test_wait_rejects_empty_task_id(tmp_path: Path):
+    renderer = GatewayRenderer(output_dir=tmp_path)
+    with pytest.raises(GatewayRendererError) as exc_info:
+        renderer.wait(TaskHandle(task_id=""))
+    assert exc_info.value.code == "task_id_required"
