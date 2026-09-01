@@ -27,7 +27,7 @@ Use this skill to turn a video request into a validated, reproducible production
 
 ## Repository runtime
 
-The bundled `video_skill` package is host-independent and provides the plan model, normalizer, preflight checks, prompt builder, and adapter protocols. Use `video-skill validate <file>` or `video-skill build-prompt <file>` for local dry runs.
+The bundled `video_skill` package is host-independent and provides the plan model, normalizer, preflight checks, prompt builder, adapter protocols, and an optional Seedance HTTP renderer. Use `video-skill validate <file>` or `video-skill build-prompt <file>` for local dry runs. Use `VIDEO_SKILL_BASE_URL=... VIDEO_SKILL_API_KEY=... video-skill render <file>` only when you intend to create a provider task.
 
 For a real render, implement or install a renderer adapter and configure its credentials outside the plan file. Read `references/adapter-contract.md` before adding a provider integration.
 

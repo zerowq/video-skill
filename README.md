@@ -12,7 +12,7 @@
 - 单任务幂等键生成
 - 不需要 API Key 的 dry-run CLI
 - Renderer、ArtifactStore、DeliverySink 的可替换接口
-- Seedance 适配器可作为后续独立模块加入，不绑定核心包
+- 可选的 Seedance HTTP Renderer（创建、轮询和 MP4 下载）
 
 ## 快速开始
 
@@ -22,9 +22,14 @@ source .venv/bin/activate
 python -m pip install -e '.[dev]'
 video-skill validate examples/product.json
 video-skill build-prompt examples/product.json
+# 配置网关后才会创建真实任务：
+VIDEO_SKILL_BASE_URL=https://your-gateway.example \
+VIDEO_SKILL_API_KEY=your-key \
+video-skill render examples/product.json --output-dir ./video-output
 ```
 
 `build-prompt` 只执行本地计划校验和 Prompt 构建，不会创建云端视频任务。
+`render` 会创建一个真实任务并轮询到成片，请确认网关、模型账号和素材授权后再运行。
 
 ## 工作流
 

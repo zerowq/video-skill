@@ -2,7 +2,7 @@
 
 from .models import VideoPlan, VideoReference
 from .adapters import ArtifactStore, DeliverySink, Renderer
-from .workflow import build_prompt, normalize_plan, validate_plan
+from .workflow import build_prompt, normalize_plan, to_render_request, validate_plan
 
 __all__ = [
     "ArtifactStore",
@@ -12,5 +12,6 @@ __all__ = [
     "VideoReference",
     "build_prompt",
     "normalize_plan",
+    "to_render_request",
     "validate_plan",
 ]

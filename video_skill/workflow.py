@@ -6,6 +6,7 @@ from dataclasses import replace
 from typing import Any
 
 from .models import ROLE_LABELS, PlanError, VideoPlan, VideoReference, plan_from_dict
+from .adapters import RenderRequest
 
 
 def normalize_plan(plan: VideoPlan) -> VideoPlan:
@@ -74,3 +75,15 @@ def build_prompt(raw: dict[str, Any] | VideoPlan) -> str:
     if plan.negative_constraints:
         lines.append("负面约束：" + "；".join(plan.negative_constraints) + "。")
     return "\n\n".join(lines)
+
+
+def to_render_request(raw: dict[str, Any] | VideoPlan, *, request_id: str = "video-skill") -> RenderRequest:
+    plan = validate_plan(raw)
+    return RenderRequest(
+        prompt=build_prompt(plan),
+        references=tuple(reference.url for reference in plan.references),
+        aspect_ratio=plan.aspect_ratio,
+        duration_seconds=plan.duration_seconds,
+        generate_audio=plan.generate_audio,
+        idempotency_key=idempotency_key(plan, request_id=request_id),
+    )
